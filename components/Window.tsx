@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, Copy, Maximize2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
+import { X, Minus, Plus, Copy } from 'lucide-react';
 
 interface WindowProps {
   id: string;
@@ -27,26 +27,38 @@ const Window: React.FC<WindowProps> = ({
 }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isHoveringControls, setIsHoveringControls] = useState(false);
+  
+  // Track position to restore after un-maximizing
+  const [lastPos, setLastPos] = useState({ x: 100, y: 100 });
+  const x = useMotionValue(100);
+  const y = useMotionValue(100);
+
+  // Sync state with motion values during drag
+  const handleDragEnd = () => {
+    setLastPos({ x: x.get(), y: y.get() });
+  };
 
   if (!isOpen) return null;
 
-  const headerHeight = 32; 
-  const dockAreaHeight = 96; 
+  const headerHeight = 32; // HarshOS top bar height
+  const dockAreaHeight = 90; // Space to leave for dock at bottom
 
-  const maximizedStyles = {
-    top: headerHeight,
-    left: 0,
-    x: 0,
-    y: 0,
-    width: '100vw',
-    height: `calc(100vh - ${headerHeight}px - ${dockAreaHeight}px)`,
-    borderRadius: '0px'
+  // Maximized target values
+  const maximizedTarget = {
+    x: 8,
+    y: headerHeight + 8,
+    width: window.innerWidth - 16,
+    height: window.innerHeight - (headerHeight + dockAreaHeight + 16),
+    borderRadius: 12,
   };
 
-  const normalStyles = {
-    width: initialSize.width, 
+  // Normal target values
+  const normalTarget = {
+    x: lastPos.x,
+    y: lastPos.y,
+    width: initialSize.width,
     height: initialSize.height,
-    borderRadius: '16px',
+    borderRadius: 16,
   };
 
   return (
@@ -54,29 +66,31 @@ const Window: React.FC<WindowProps> = ({
       drag={!isMaximized}
       dragMomentum={false}
       dragElastic={0}
-      dragTransition={{ power: 0 }}
+      style={{ x, y }}
+      onDragEnd={handleDragEnd}
       onMouseDown={onFocus}
-      initial={{ opacity: 0, scale: 0.9, y: 30 }}
-      animate={{ 
-        opacity: 1, 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{
+        opacity: 1,
         scale: 1,
-        ...(isMaximized ? maximizedStyles : normalStyles)
+        ...(isMaximized ? maximizedTarget : normalTarget),
       }}
-      exit={{ opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15 } }}
-      transition={{ type: 'spring', damping: 30, stiffness: 300, mass: 0.8 }}
-      className={`absolute left-[10%] top-[10%] flex flex-col overflow-hidden border border-white/20 backdrop-blur-3xl bg-slate-950/80 shadow-2xl pointer-events-auto ${
-        isActive ? 'z-50 shadow-blue-500/20 ring-1 ring-blue-500/40' : 'z-10 shadow-black/80'
-      } ${isMaximized ? 'fixed !left-0 !top-0' : ''}`}
-      style={{ 
-        minWidth: isMaximized ? '100vw' : 320,
-        minHeight: isMaximized ? `calc(100vh - ${headerHeight}px - ${dockAreaHeight}px)` : 240,
-        maxWidth: isMaximized ? '100vw' : '90vw',
-        maxHeight: isMaximized ? `calc(100vh - ${headerHeight}px - ${dockAreaHeight}px)` : '80vh',
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+      transition={{ 
+        type: 'spring', 
+        damping: 30, 
+        stiffness: 300,
+        // Ensure opacity and scale are fast
+        opacity: { duration: 0.2 },
+        scale: { duration: 0.2 }
       }}
+      className={`absolute flex flex-col overflow-hidden border border-white/20 backdrop-blur-3xl bg-slate-950/90 shadow-2xl pointer-events-auto ${
+        isActive ? 'z-50 shadow-blue-500/20 ring-1 ring-blue-500/40' : 'z-10 shadow-black/80 opacity-90'
+      }`}
     >
       {/* Title Bar - macOS Style */}
       <div 
-        className="flex items-center h-10 px-4 bg-white/5 border-b border-white/10 select-none cursor-grab active:cursor-grabbing shrink-0 relative"
+        className={`flex items-center h-10 px-4 bg-white/5 border-b border-white/10 select-none shrink-0 relative ${!isMaximized ? 'cursor-grab active:cursor-grabbing' : ''}`}
       >
         {/* Functional macOS Traffic Lights */}
         <div 
@@ -87,39 +101,46 @@ const Window: React.FC<WindowProps> = ({
           {/* Close */}
           <button 
             onClick={(e) => { e.stopPropagation(); onClose(); }}
-            className="w-3 h-3 rounded-full bg-[#ff5f56] flex items-center justify-center group/btn relative overflow-hidden"
+            className="w-3 h-3 rounded-full bg-[#ff5f56] flex items-center justify-center group/btn relative transition-transform active:scale-90"
           >
             <X 
               size={8} 
-              className={`text-black/60 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
+              className={`text-black/70 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
             />
           </button>
           
           {/* Minimize */}
           <button 
             onClick={(e) => { e.stopPropagation(); onMinimize(); }}
-            className="w-3 h-3 rounded-full bg-[#ffbd2e] flex items-center justify-center group/btn relative overflow-hidden"
+            className="w-3 h-3 rounded-full bg-[#ffbd2e] flex items-center justify-center group/btn relative transition-transform active:scale-90"
           >
             <Minus 
               size={8} 
-              className={`text-black/60 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
+              className={`text-black/70 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
             />
           </button>
           
-          {/* Maximize */}
+          {/* Maximize / Restore */}
           <button 
-            onClick={(e) => { e.stopPropagation(); setIsMaximized(!isMaximized); }}
-            className="w-3 h-3 rounded-full bg-[#27c93f] flex items-center justify-center group/btn relative overflow-hidden"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (!isMaximized) {
+                // Store current pos before snapping to maximized
+                setLastPos({ x: x.get(), y: y.get() });
+              }
+              setIsMaximized(!isMaximized); 
+            }}
+            className="w-3 h-3 rounded-full bg-[#27c93f] flex items-center justify-center group/btn relative transition-transform active:scale-90"
           >
             {isMaximized ? (
               <Copy 
                 size={8} 
-                className={`text-black/60 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
+                className={`text-black/70 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
               />
             ) : (
               <Plus 
                 size={8} 
-                className={`text-black/60 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
+                className={`text-black/70 transition-opacity duration-200 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} 
               />
             )}
           </button>
@@ -127,7 +148,7 @@ const Window: React.FC<WindowProps> = ({
 
         {/* Centered Title */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/40 truncate max-w-[200px]">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 truncate max-w-[200px]">
             {title}
           </span>
         </div>

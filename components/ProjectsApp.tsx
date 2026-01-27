@@ -9,111 +9,75 @@ const ProjectCard: React.FC<{ project: typeof PROJECTS[0], idx: number }> = ({ p
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
-      animate={isHovered ? {
-        scale: [1.04, 1.06, 1.04],
-        filter: ["brightness(1)", "brightness(1.2)", "brightness(1)"],
-        y: -12,
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        opacity: 1
-      } : {
+      animate={{
         opacity: 1,
         y: 0,
-        scale: 1,
-        filter: "brightness(1)",
-        backgroundColor: "rgba(255, 255, 255, 0.05)"
       }}
-      transition={isHovered ? {
-        scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-        filter: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-        y: { duration: 0.3, ease: "easeOut" },
-        backgroundColor: { duration: 0.3 }
-      } : {
-        delay: idx * 0.08,
-        duration: 0.5,
-        ease: [0.23, 1, 0.32, 1]
+      transition={{
+        duration: 0.4,
+        ease: [0.23, 1, 0.32, 1],
+        delay: idx * 0.05
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileTap={{ 
-        scale: 0.94, 
-        opacity: 0.6,
-        filter: "brightness(0.8)",
-        transition: { duration: 0.1 } 
-      }}
-      className="group p-6 rounded-2xl bg-white/5 border border-white/10 transition-shadow duration-500 flex flex-col justify-between cursor-pointer overflow-hidden relative h-full"
+      whileTap={{ scale: 0.98 }}
+      className="group p-6 rounded-2xl bg-white/5 border border-white/10 transition-all duration-300 flex flex-col justify-between cursor-pointer overflow-hidden relative h-full hover:bg-white/[0.08] hover:border-blue-500/30"
       style={{
-        boxShadow: isHovered ? '0 25px 50px -12px rgba(59, 130, 246, 0.3)' : 'none'
+        boxShadow: isHovered ? '0 20px 40px -10px rgba(59, 130, 246, 0.2)' : 'none',
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0px)',
+        zIndex: isHovered ? 20 : 1
       }}
     >
-      {/* Animated Glow Border Overlay */}
+      {/* Subtle Glow Overlay */}
       <AnimatePresence>
         {isHovered && (
           <motion.div 
             initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: 1,
-              boxShadow: [
-                "inset 0 0 0px rgba(59, 130, 246, 0)",
-                "inset 0 0 25px rgba(59, 130, 246, 0.4)",
-                "inset 0 0 0px rgba(59, 130, 246, 0)"
-              ],
-              borderColor: [
-                "rgba(59, 130, 246, 0.4)",
-                "rgba(59, 130, 246, 0.8)",
-                "rgba(59, 130, 246, 0.4)"
-              ]
-            }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 2, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
-            }}
-            className="absolute inset-0 rounded-2xl pointer-events-none border-2 border-blue-500/50 z-0"
+            className="absolute inset-0 rounded-2xl pointer-events-none z-0 bg-gradient-to-br from-blue-500/[0.03] to-transparent"
           />
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 pointer-events-none">
+      <div className="relative z-10">
         <div className="flex justify-between items-start mb-4">
-          <h3 className="font-bold text-xl text-white group-hover:text-blue-400 transition-colors uppercase tracking-tight">
+          <h3 className="font-black text-lg text-white group-hover:text-blue-400 transition-colors uppercase tracking-tight">
             {project.title}
           </h3>
-          <div className="flex gap-4 pointer-events-auto">
+          <div className="flex gap-3">
             {project.github && (
-              <motion.a 
-                whileHover={{ scale: 1.2, color: '#60a5fa' }}
+              <a 
                 href={project.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-white/40 hover:text-white transition-colors cursor-pointer"
+                className="text-white/40 hover:text-white transition-colors p-1"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Github size={20} />
-              </motion.a>
+                <Github size={16} />
+              </a>
             )}
-            <motion.a 
-              whileHover={{ scale: 1.2, color: '#60a5fa' }}
+            <a 
               href={project.link || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white/40 hover:text-white transition-colors cursor-pointer"
+              className="text-white/40 hover:text-white transition-colors p-1"
               onClick={(e) => e.stopPropagation()}
             >
-              <ExternalLink size={20} />
-            </motion.a>
+              <ExternalLink size={16} />
+            </a>
           </div>
         </div>
-        <p className="text-sm text-white/50 mb-6 line-clamp-3 leading-relaxed group-hover:text-white/80 transition-colors">
+        <p className="text-xs text-white/50 mb-6 line-clamp-3 leading-relaxed group-hover:text-white/70 transition-colors font-medium">
           {project.description}
         </p>
       </div>
       
-      <div className="flex flex-wrap gap-2 mt-auto relative z-10 pointer-events-none">
+      <div className="flex flex-wrap gap-2 mt-auto relative z-10">
         {project.tags.map(tag => (
           <span 
             key={tag} 
-            className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-tighter group-hover:bg-blue-500/20 group-hover:border-blue-500/40 transition-all duration-300"
+            className="text-[9px] font-black px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-widest transition-colors group-hover:bg-blue-500/20"
           >
             {tag}
           </span>
@@ -125,7 +89,7 @@ const ProjectCard: React.FC<{ project: typeof PROJECTS[0], idx: number }> = ({ p
 
 const ProjectsApp: React.FC = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-1">
       {PROJECTS.map((project, idx) => (
         <ProjectCard key={idx} project={project} idx={idx} />
       ))}

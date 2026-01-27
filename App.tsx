@@ -170,7 +170,7 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5 font-bold uppercase tracking-tighter text-blue-400">
             <Cpu size={14} className="animate-pulse" />
-            <span className="text-xs">HarshOS v1.2</span>
+            <span className="text-xs">HarshOS v2.0</span>
           </div>
           <div className="h-3 w-px bg-white/20" />
           <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">SYSTEM READY</span>
