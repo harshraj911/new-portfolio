@@ -2,7 +2,7 @@
 // Added React import to resolve React namespace errors
 import React from 'react';
 
-export type AppID = 'terminal' | 'projects' | 'skills' | 'experience' | 'about' | 'contact' | 'resume';
+export type AppID = 'terminal' | 'projects' | 'skills' | 'experience' | 'about' | 'contact' | 'resume' | 'games';
 
 export interface AppConfig {
   id: AppID;

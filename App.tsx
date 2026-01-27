@@ -14,7 +14,9 @@ import {
   Volume2, 
   Bluetooth,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Gamepad2,
+  BatteryCharging
 } from 'lucide-react';
 import Background from './components/Background';
 import Window from './components/Window';
@@ -25,6 +27,8 @@ import SkillsApp from './components/SkillsApp';
 import ExperienceApp from './components/ExperienceApp';
 import AboutApp from './components/AboutApp';
 import ContactApp from './components/ContactApp';
+import ResumeApp from './components/ResumeApp';
+import GamesApp from './components/GamesApp';
 import { AppID, AppConfig } from './types';
 
 const App: React.FC = () => {
@@ -32,8 +36,25 @@ const App: React.FC = () => {
   const [activeApp, setActiveApp] = useState<AppID | null>(null);
   const [minimizedApps, setMinimizedApps] = useState<AppID[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [battery, setBattery] = useState({ level: 100, charging: false });
 
-  // Sync fullscreen state with document
+  // System Battery Integration
+  useEffect(() => {
+    if ('getBattery' in navigator) {
+      (navigator as any).getBattery().then((batt: any) => {
+        const updateBattery = () => {
+          setBattery({
+            level: Math.round(batt.level * 100),
+            charging: batt.charging
+          });
+        };
+        updateBattery();
+        batt.addEventListener('levelchange', updateBattery);
+        batt.addEventListener('chargingchange', updateBattery);
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -72,7 +93,7 @@ const App: React.FC = () => {
       name: 'Projects.app', 
       icon: <Code size={32} />, 
       component: <ProjectsApp />,
-      initialSize: { width: 750, height: 550 }
+      initialSize: { width: 850, height: 600 }
     },
     { 
       id: 'skills', 
@@ -89,6 +110,13 @@ const App: React.FC = () => {
       initialSize: { width: 600, height: 500 }
     },
     { 
+      id: 'games', 
+      name: 'Games.app', 
+      icon: <Gamepad2 size={32} />, 
+      component: <GamesApp />,
+      initialSize: { width: 500, height: 600 }
+    },
+    { 
       id: 'contact', 
       name: 'Contact.app', 
       icon: <Mail size={32} />, 
@@ -99,14 +127,8 @@ const App: React.FC = () => {
       id: 'resume', 
       name: 'Resume.pdf', 
       icon: <FileText size={32} />, 
-      component: (
-        <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
-          <FileText size={64} className="text-blue-500/50" />
-          <p className="text-white/60">Resume module not integrated in this demo environment.</p>
-          <button className="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-bold uppercase text-xs tracking-widest transition-all">Download PDF</button>
-        </div>
-      ),
-      initialSize: { width: 400, height: 300 }
+      component: <ResumeApp />,
+      initialSize: { width: 600, height: 700 }
     },
   ];
 
@@ -140,61 +162,62 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden text-slate-100 select-none">
+    <div className="relative w-screen h-screen overflow-hidden text-slate-100 select-none bg-slate-950">
       <Background />
 
       {/* OS Header Bar */}
-      <div className="fixed top-0 left-0 right-0 h-8 flex items-center justify-between px-4 bg-black/40 backdrop-blur-md border-b border-white/5 z-[100]">
+      <div className="fixed top-0 left-0 right-0 h-8 flex items-center justify-between px-4 bg-black/60 backdrop-blur-xl border-b border-white/10 z-[100]">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 font-black uppercase tracking-tighter text-blue-400">
-            <Cpu size={16} />
-            <span>HarshOS v1.0</span>
+          <div className="flex items-center gap-1.5 font-bold uppercase tracking-tighter text-blue-400">
+            <Cpu size={14} className="animate-pulse" />
+            <span className="text-xs">HarshOS v1.2</span>
           </div>
-          <div className="h-4 w-px bg-white/10" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">AI Deep Space Network</span>
+          <div className="h-3 w-px bg-white/20" />
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40">SYSTEM READY</span>
         </div>
         
         <div className="flex items-center gap-4 text-white/60">
           <button 
             onClick={toggleFullscreen}
             className="p-1 hover:bg-white/10 rounded transition-all active:scale-95"
-            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
           >
-            {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            {isFullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
           </button>
-          <div className="h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-2">
-            <Bluetooth size={14} />
-            <Wifi size={14} />
-            <Volume2 size={14} />
+          <div className="h-3 w-px bg-white/20" />
+          <div className="flex items-center gap-3">
+            <Bluetooth size={12} />
+            <Wifi size={12} />
+            <Volume2 size={12} />
           </div>
-          <div className="h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-2">
-            <Battery size={14} />
-            <span className="text-[10px] font-bold">85%</span>
+          <div className="h-3 w-px bg-white/20" />
+          <div className="flex items-center gap-1.5">
+            {battery.charging ? <BatteryCharging size={12} className="text-green-400" /> : <Battery size={12} />}
+            <span className="text-[9px] font-bold">{battery.level}%</span>
           </div>
-          <div className="h-4 w-px bg-white/10" />
-          <span className="text-xs font-bold tracking-tight">{time}</span>
+          <div className="h-3 w-px bg-white/20" />
+          <span className="text-[10px] font-bold tracking-tight text-white/80">{time}</span>
         </div>
       </div>
 
       {/* Desktop Grid */}
-      <div className="absolute inset-0 pt-12 pb-20 px-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 auto-rows-min pointer-events-none">
-        {APPS.map((app) => (
-          <div key={app.id} className="pointer-events-auto">
-            <DesktopIcon
-              id={app.id}
-              name={app.name}
-              icon={app.icon}
-              isOpen={openApps.includes(app.id)}
-              onClick={() => handleOpenApp(app.id)}
-            />
-          </div>
-        ))}
+      <div className="absolute inset-0 pt-12 pb-24 px-8 z-0 overflow-hidden pointer-events-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-6 auto-rows-min w-fit h-full">
+          {APPS.map((app) => (
+            <div key={app.id} className="pointer-events-auto">
+              <DesktopIcon
+                id={app.id}
+                name={app.name}
+                icon={app.icon}
+                isOpen={openApps.includes(app.id)}
+                onClick={() => handleOpenApp(app.id)}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Windows Container */}
-      <div className="absolute inset-0 pt-8 pb-16 pointer-events-none z-10">
+      {/* Windows Layer */}
+      <div className="absolute inset-0 pt-8 pb-16 z-20 pointer-events-none">
         <AnimatePresence>
           {APPS.map((app) => (
             <Window
@@ -214,35 +237,36 @@ const App: React.FC = () => {
         </AnimatePresence>
       </div>
 
-      {/* Bottom Taskbar */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 mb-4 p-2 flex items-center gap-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-[100]">
+      {/* Dock / Taskbar */}
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 mb-4 p-1.5 flex items-center gap-1 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[100]">
         {APPS.map((app) => (
           <button
             key={app.id}
             onClick={() => handleOpenApp(app.id)}
-            className={`p-3 rounded-xl transition-all relative group ${
-              activeApp === app.id ? 'bg-blue-500/20 text-blue-400 scale-110 shadow-lg shadow-blue-500/20' : 'text-white/40 hover:text-white hover:bg-white/10'
+            className={`p-3 rounded-xl transition-all relative group flex flex-col items-center ${
+              activeApp === app.id 
+                ? 'bg-blue-500/20 text-blue-300 scale-105 shadow-inner border border-blue-500/20' 
+                : 'text-white/40 hover:text-white hover:bg-white/5'
             }`}
           >
-            <div className="transform scale-75 origin-center">
+            <div className="transform scale-90">
               {app.icon}
             </div>
             {openApps.includes(app.id) && (
-              <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${
-                activeApp === app.id ? 'bg-blue-400' : 'bg-white/40'
+              <div className={`absolute -bottom-0.5 w-1 h-1 rounded-full ${
+                activeApp === app.id ? 'bg-blue-400 shadow-[0_0_8px_#60a5fa]' : 'bg-white/20'
               }`} />
             )}
             
-            {/* Tooltip */}
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/80 backdrop-blur-md border border-white/10 rounded text-[10px] uppercase font-bold tracking-widest text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900/90 backdrop-blur-md border border-white/10 rounded text-[9px] uppercase font-bold tracking-widest text-white opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 pointer-events-none whitespace-nowrap shadow-xl">
               {app.name}
             </div>
           </button>
         ))}
       </div>
       
-      {/* Visual FX: Vignette */}
-      <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] z-[200]" />
+      {/* Cinematic Vignette */}
+      <div className="fixed inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.6)] z-[200]" />
     </div>
   );
 };
