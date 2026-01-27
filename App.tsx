@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { 
@@ -10,7 +9,7 @@ import {
   Mail, 
   FileText, 
   Wifi, 
-  Battery, 
+  Battery as BatteryIcon, 
   Volume2, 
   Bluetooth,
   Maximize2,
@@ -38,10 +37,11 @@ const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [battery, setBattery] = useState({ level: 100, charging: false });
 
-  // System Battery Integration
+  // System Battery Integration with fallback
   useEffect(() => {
-    if ('getBattery' in navigator) {
-      (navigator as any).getBattery().then((batt: any) => {
+    const nav = navigator as any;
+    if (nav.getBattery && typeof nav.getBattery === 'function') {
+      nav.getBattery().then((batt: any) => {
         const updateBattery = () => {
           setBattery({
             level: Math.round(batt.level * 100),
@@ -51,7 +51,7 @@ const App: React.FC = () => {
         updateBattery();
         batt.addEventListener('levelchange', updateBattery);
         batt.addEventListener('chargingchange', updateBattery);
-      });
+      }).catch((e: any) => console.warn("Battery status unavailable", e));
     }
   }, []);
 
@@ -191,7 +191,7 @@ const App: React.FC = () => {
           </div>
           <div className="h-3 w-px bg-white/20" />
           <div className="flex items-center gap-1.5">
-            {battery.charging ? <BatteryCharging size={12} className="text-green-400" /> : <Battery size={12} />}
+            {battery.charging ? <BatteryCharging size={12} className="text-green-400" /> : <BatteryIcon size={12} />}
             <span className="text-[9px] font-bold">{battery.level}%</span>
           </div>
           <div className="h-3 w-px bg-white/20" />
